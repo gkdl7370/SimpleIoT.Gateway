@@ -1,7 +1,7 @@
 # 🚀 SimpleIoT.Gateway
 > **TCP 소켓 기반의 센서 데이터를 수집하여 REST API로 중계하는 경량형 산업용 게이트웨이 엔진**
 
-![CI/CD Pipeline](https://github.com/[사용자ID]/SimpleIoT.Gateway/actions/workflows/main.yml/badge.svg)
+![CI/CD Pipeline](https://github.com/gkdl7370/SimpleIoT.Gateway/actions/workflows/main.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
 ![.NET](https://img.shields.io/badge/.NET-512BD4?style=flat&logo=.net&logoColor=white)
 
