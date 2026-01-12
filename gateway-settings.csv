@@ -1,0 +1,3 @@
+#ListenPort,TargetHost,TargetPort,ApiPath
+8080,api.example-iot.com,443,api/v1/telemetry
+8081,localhost,9000,data/ingest
