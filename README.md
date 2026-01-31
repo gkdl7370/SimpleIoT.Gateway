@@ -26,6 +26,7 @@
 3. **Forward**: 수집된 데이터를 RESTful API 표준에 맞춰 JSON으로 변환 후 클라우드 서버 전송.
 
 ## 🧠 핵심 해결 과제 (Key Learning Points)
+### 0.JAVA서버의 부하를 줄이기 위한 별도의 미들웨어 셋팅
 
 ### 1. 관심사 분리 (Separation of Concerns)
 기존 `MainForm.cs` 하나에 집중되어 있던 네트워크 통신, 데이터 분석, 설정 로드 로직을 `Core`, `Utils`, `Models` 폴더 구조로 계층화하여 유지보수성을 극대화했습니다.
