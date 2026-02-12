@@ -1,48 +1,50 @@
-# 🚀 SimpleIoT.Gateway
-> **TCP 소켓 기반의 센서 데이터를 수집하여 REST API로 중계하는 경량형 산업용 게이트웨이 엔진**
+# [DevLog] SimpleIoT.Gateway
 
-![CI/CD Pipeline](https://github.com/gkdl7370/SimpleIoT.Gateway/actions/workflows/main.yml/badge.svg)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET-512BD4?style=flat&logo=.net&logoColor=white)
+> **목표:** Windows 종속적이었던 기존 C# 통신 엔진의 .NET Core 리팩토링 및 컨테이너 환경 이관 가능성 검증
+> .NET Core 리팩토링을 통해 OS 종속성을 해결하고 클라우드 이관 가능성을 공부하며 기록한 PoC입니다.
 
-## 💡 프로젝트 동기 (Project Motivation)
-본 프로젝트는 기존 WinForms 기반의 레거시 데이터 수신기를 현대적인 마이크로서비스 아키텍처로 전환하기 위해 시작되었습니다.
-- **레거시 탈피**: UI 의존성이 높은 WinForms 구조에서 비즈니스 로직을 완벽히 분리.
-- **플랫폼 독립성**: Docker 컨테이너화를 통해 Windows 환경을 넘어 Linux 서버 어디서든 동작 가능하게 설계.
-- **자동화 도입**: GitHub Actions를 활용하여 코드 수정 시 빌드 및 배포 안정성을 실시간으로 검증.
+---
 
-## 🛠 기술 스택 (Tech Stack)
-- **Framework**: .NET 7.0 (Console Application)
-- **Communication**: Asynchronous TCP Socket (Async/Await)
-- **Data Format**: Binary (Custom Protocol) → JSON (REST API)
-- **Container**: Docker (Multi-stage Build)
-- **CI/CD**: GitHub Actions
+## 1. WHY?
+실무에서 운영했던 C# 기반 통신 엔진은 당시 온프레미스 내부망 환경에서 5,000 TPS를 견디는 매우 안정적인 시스템이다. 하지만 Win32 API와 GUI 라이브러리에 밀접하게 결합되어 있는 구조적 특징 때문에 최신 클라우드(Linux/Docker) 환경으로 확장하는 데에는 제약이 있어 이걸 해결해보고자 한다.
 
-## 🏗 시스템 아키텍처 (System Architecture)
+* **OS 종속성:** Win32 API 및 GUI 라이브러리에 밀접하게 결합되어 있는 아키텍처를 클라우드(Linux/Docker) 환경으로의 확장해 보고 싶어서 수정 중
+* **질문:** "기존의 검증된 로직을 그대로 유지하면서 OS 의존성만 걷어내 컨테이너화할 수 있을까?"
+* **목표:** 레거시의 핵심 로직(바이너리 파싱, 비동기 I/O)만 추출하여 .NET Core 기반의 Docker 컨테이너로 현대화
 
+---
 
-1. **Ingest**: 산업용 센서로부터 TCP/IP를 통해 실시간 바이너리 데이터 수집.
-2. **Process**: `DataParser` 유틸리티를 통한 바이너리 분석 및 설정 파일(CSV) 기반의 장비 매핑.
-3. **Forward**: 수집된 데이터를 RESTful API 표준에 맞춰 JSON으로 변환 후 클라우드 서버 전송.
+## 2. 해결 과정: OS 종속성 탈피 및 구조 개선
 
-## 🧠 핵심 해결 과제 (Key Learning Points)
-### 0. JAVA서버의 부하를 줄이기 위한 별도의 미들웨어 셋팅
+### 2.1. Win32 의존성 제거 및 아키텍처 재설계
+* **환경 확장:** Windows 서버로만 제한되던 인프라 환경을 Linux/Docker로 확장하기 위해 Windows 전용 라이브러리를 .NET 표준 비동기 모델(APM)로 전면 교체 중
+* **계층 분리:** GUI와 로직이 혼재되어 있던 구조를 해체하여 순수하게 데이터 처리만 담당하는 `Core`, `Utils`, `Models`로 분리하여 코드의 응집도를 높이고 컨테이너 환경에서의 가동률을 높이는 데 집중함
+  
+### 2.2. Java 서버 보호를 위한 '격리 계층' 강화
+* 미들웨어가 단순히 데이터를 전달하는 것을 넘어 저수준 바이너리 파싱을 전담하게 하여 Java 메인 서버의 GC부담을 걷어내 주는 **'장애 격리 완충 계층(Isolated Buffer)'**으로서의 역할을 재정의
 
-### 1. 관심사 분리 (Separation of Concerns)
-기존 `MainForm.cs` 하나에 집중되어 있던 네트워크 통신, 데이터 분석, 설정 로드 로직을 `Core`, `Utils`, `Models` 폴더 구조로 계층화하여 유지보수성을 극대화했습니다.
+---
 
-### 2. Null 안정성 및 방어적 코딩
-.NET의 **Nullable Reference Types** 기능을 활용하여 런타임 중에 발생할 수 있는 `NullReferenceException`을 컴파일 시점에 차단, 경고 0개의 클린 코드를 달성했습니다.
+## 3. 기술적 구현 및 트러블슈팅 노트
 
-### 3. Docker 멀티 스테이지 빌드
-빌드용 이미지(SDK)와 실행용 이미지(Runtime)를 분리하여 컨테이너 용량을 최소화하고 보안을 강화했습니다.
+### 3.1. 바이너리 데이터의 보편성 확보
+* OS가 바뀌어도 데이터의 본질은 변하지 않으니 `0x02(STX)` 토큰 기반 패킷 분석 로직을 별도 유틸리티로 캡슐화하여 환경과 무관하게 데이터 신뢰성을 확보할 수 있는 파서 구현
 
-## 🚀 시작하기 (Getting Started)
+### 3.2. 멱등성(Idempotency) 설계 공부
+* `TelemetryData.cs` 내부에 `GetUniqueKey()` 메서드를 구현하여 `SiteCode_DeviceId_MeasuredAt` 조합의 고유 키를 생성
+* 네트워크 재전송 시 발생할 수 있는 중복 데이터를 미들웨어 혹은 수신 서버 단에서 효과적으로 필터링할 수 있는 설계적 근거를 잡음
 
-### Docker 환경에서 실행
-```bash
-# 이미지 빌드
-docker build -t simple-iot-gateway .
+> **Memo:** 단순히 도커에 올리는 것뿐만 아니라 "어떻게 하면 미들웨어 단계에서 정제된 데이터만을 제공하여 전체 시스템의 효율성을 높일 것인가"에 대한 고민도 같이 하는 중
 
-# 컨테이너 실행 (호스트 8003 포트를 게이트웨이 8081 포트에 연결)
-docker run -d -p 8003:8081 --name my-gateway simple-iot-gateway
+---
+
+## 4. Dockerization 및 리소스 최적화
+* **Multi-stage Build:** 빌드와 실행 환경을 분리하여 컨테이너 이미지를 최소화하는 기법 실습
+* **결과:** 무거운 Windows 서버 인프라 없이도 Linux 런타임 이미지(약 65% 경량화)만으로 고속 I/O 처리가 가능한지 확인 중
+
+---
+
+## 5. 결론 및 향후 과제
+* **학습 성과:** .NET Core 리팩토링을 통해 OS의 제약을 받지 않고도 안정적으로 바이너리 데이터를 JSON으로 변환하여 전달하는 구조의 가능성을 확인
+* **Next Step:** 1. 현재의 HTTP 전달 방식을 **Redis Pub/Sub** 인터페이스로 교체하여 완전한 비동기 이벤트 파이프라인으로 확장해 볼 계획
+    2. 실시간 채널 안정성을 위한 **Ack/Fallback** 메커니즘을 애플리케이션 레벨에서 구현해 보는 공부를 이어갈 예정
