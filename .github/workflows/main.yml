@@ -2,28 +2,29 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ] # 메인 브랜치에 코드가 올라올 때 실행
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: 소스 코드 가져오기
-      uses: actions/checkout@v3
+      - name: 소스 코드 가져오기
+        uses: actions/checkout@v4
 
-    - name: .NET 설정
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x
+      - name: .NET 8 설정
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: 의존성 복원
-      run: dotnet restore
+      - name: 애플리케이션 의존성 복원
+        run: dotnet restore SimpleIoT.Gateway.csproj
 
-    - name: 빌드
-      run: dotnet build --no-restore -c Release
+      - name: 애플리케이션 빌드
+        run: dotnet build SimpleIoT.Gateway.csproj --no-restore -c Release
 
-    - name: 테스트 실행
-      run: dotnet test tests/SimpleIoT.Gateway.Tests/SimpleIoT.Gateway.Tests.csproj -c Release
+      - name: 테스트 실행
+        run: dotnet test tests/SimpleIoT.Gateway.Tests/SimpleIoT.Gateway.Tests.csproj -c Release
 
-    - name: Docker 이미지 빌드
-      run: docker build -t simple-iot-gateway .
+      - name: Docker 이미지 빌드
+        run: docker build -t simple-iot-gateway .
