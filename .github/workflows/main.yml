@@ -8,18 +8,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: 소스 코드 가져오기
+      uses: actions/checkout@v3
 
-    - name: Setup .NET
+    - name: .NET 설정
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
 
-    - name: Restore dependencies
+    - name: 의존성 복원
       run: dotnet restore
 
-    - name: Build
+    - name: 빌드
       run: dotnet build --no-restore -c Release
 
-    - name: Docker Build
+    - name: 테스트 실행
+      run: dotnet test tests/SimpleIoT.Gateway.Tests/SimpleIoT.Gateway.Tests.csproj -c Release
+
+    - name: Docker 이미지 빌드
       run: docker build -t simple-iot-gateway .

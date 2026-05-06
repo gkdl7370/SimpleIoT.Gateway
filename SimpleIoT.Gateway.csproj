@@ -2,19 +2,19 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     
     <AssemblyName>SimpleIoT.Gateway</AssemblyName>
     <RootNamespace>SimpleIoT.Gateway</RootNamespace>
     <Version>1.0.0</Version>
-    <Authors>YourName</Authors>
+    <Authors>Jiho Kim</Authors>
     <Description>Asynchronous IoT Data Gateway service designed for Linux containers.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.5" />
     
     </ItemGroup>
 
